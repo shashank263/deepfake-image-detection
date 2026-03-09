@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Detection AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #1a0e3a 50%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Neural Network Background Animation */
+        .neural-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.15;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, #00f5ff, #0099ff);
+            border-radius: 50%;
+            box-shadow: 0 0 20px #00f5ff;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); opacity: 0.8; }
+            50% { transform: translate(100px, 100px); opacity: 0.3; }
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00f5ff 0%, #a78bfa 50%, #ff00ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+            text-shadow: 0 0 30px rgba(0, 245, 255, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: #b0b0b0;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Upload Card */
+        .upload-card {
+            background: rgba(20, 30, 70, 0.6);
+            border: 2px solid rgba(0, 245, 255, 0.3);
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 245, 255, 0.1);
+            animation: slideUp 0.8s ease-out 0.2s backwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .upload-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .upload-card:hover {
+            border-color: rgba(0, 245, 255, 0.8);
+            box-shadow: 0 0 50px rgba(0, 245, 255, 0.3), inset 0 0 30px rgba(167, 139, 250, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .upload-card:hover::before {
+            left: 100%;
+        }
+
+        /* Drop Zone */
+        .drop-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #00f5ff 0%, #a78bfa 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 245, 255, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(0, 245, 255, 0.8); }
+        }
+
+        .upload-card.dragover {
+            border-color: #00f5ff;
+            background: rgba(20, 30, 70, 0.8);
+            box-shadow: 0 0 50px rgba(0, 245, 255, 0.4);
+        }
+
+        .upload-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtitle {
+            color: #9191a8;
+            font-weight: 300;
+            font-size: 0.95rem;
+        }
+
+        .upload-info {
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+
+        /* Hidden File Input */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* File Preview */
+        .preview-container {
+            margin-top: 30px;
+            display: none;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .preview-container.show {
+            display: block;
+        }
+
+        .preview-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 15px;
+            object-fit: cover;
+            border: 2px solid rgba(0, 245, 255, 0.5);
+            margin: 0 auto;
+            display: block;
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
+        }
+
+        .file-name {
+            margin-top: 15px;
+            color: #b0b0b0;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        /* Submit Button */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .submit-btn, .reset-btn {
+            padding: 14px 40px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #00f5ff 0%, #a78bfa 100%);
+            color: white;
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.4);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 40px rgba(0, 245, 255, 0.6);
+        }
+
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .reset-btn {
+            background: rgba(80, 80, 120, 0.4);
+            color: #b0b0b0;
+            border: 1px solid rgba(100, 100, 150, 0.5);
+        }
+
+        .reset-btn:hover {
+            background: rgba(80, 80, 120, 0.6);
+            color: #fff;
+        }
+
+        /* Loading State */
+        .processing-screen {
+            display: none;
+            text-align: center;
+            margin: 50px 0;
+        }
+
+        .processing-screen.show {
+            display: block;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .loading-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8rem;
+            color: #00f5ff;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .neural-animation {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+
+        .neural-line {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, #00f5ff, transparent);
+            animation: scan 2s infinite;
+        }
+
+        .line1 { width: 4px; height: 150px; left: 40%; animation-delay: 0s; }
+        .line2 { width: 4px; height: 150px; left: 53%; animation-delay: 0.3s; }
+        .line3 { width: 4px; height: 150px; left: 66%; animation-delay: 0.6s; }
+
+        @keyframes scan {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        .neural-dots {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+        }
+
+        .dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #00f5ff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #00f5ff;
+            animation: orbit 3s linear infinite;
+        }
+
+        .dot:nth-child(1) { animation-delay: 0s; }
+        .dot:nth-child(2) { animation-delay: 1s; }
+        .dot:nth-child(3) { animation-delay: 2s; }
+
+        @keyframes orbit {
+            0% { transform: rotate(0deg) translateX(40px); }
+            100% { transform: rotate(360deg) translateX(40px); }
+        }
+
+        .processing-text {
+            color: #b0b0b0;
+            font-size: 1rem;
+            margin-top: 20px;
+            font-weight: 300;
+        }
+
+        .analyzing-text {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .upload-card {
+                padding: 35px 20px;
+            }
+
+            .upload-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+
+            .upload-title {
+                font-size: 1.2rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .submit-btn, .reset-btn {
+                width: 100%;
+            }
+        }
+
+        /* Focus Styles */
+        .upload-card:focus-visible {
+            outline: 2px solid #00f5ff;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Neural Network Background -->
+    <div class="neural-bg" id="particleContainer"></div>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>🔍 Deepfake Detection AI</h1>
+            <p>Upload an image and instantly analyze if it's real or AI-generated</p>
+        </div>
+
+        <!-- Processing Screen (Hidden by default) -->
+        <div class="processing-screen" id="processingScreen">
+            <div class="loading-title">Analyzing Image...</div>
+            
+            <div class="neural-animation">
+                <div class="neural-dots">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+
+            <div class="processing-text">🧠 Running neural network analysis</div>
+            <div class="analyzing-text">Processing frames and patterns...</div>
+        </div>
+
+        <!-- Upload Card -->
+        <form id="uploadForm" style="display: none;">
+            <div class="upload-card" id="uploadCard">
+                <div class="drop-zone">
+                    <div class="upload-icon">⬆️</div>
+                    <div class="upload-title">Drop your image here</div>
+                    <div class="upload-subtitle">or click to select from your device</div>
+                    <div class="upload-info">Supported: JPG, PNG, GIF, BMP (Max 10MB)</div>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" required>
+            </div>
+
+            <!-- File Preview -->
+            <div class="preview-container" id="previewContainer">
+                <img id="previewImage" class="preview-image" alt="Preview">
+                <div class="file-name" id="fileName"></div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="button-group" id="buttonGroup" style="display: none;">
+                <button type="submit" class="submit-btn">🚀 Analyze Image</button>
+                <button type="button" class="reset-btn" id="resetBtn">↻ Choose Another</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const uploadCard = document.getElementById('uploadCard');
+        const fileInput = document.getElementById('fileInput');
+        const uploadForm = document.getElementById('uploadForm');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const fileName = document.getElementById('fileName');
+        const buttonGroup = document.getElementById('buttonGroup');
+        const resetBtn = document.getElementById('resetBtn');
+        const processingScreen = document.getElementById('processingScreen');
+
+        // Show upload form after page loads
+        window.addEventListener('load', () => {
+            uploadForm.style.display = 'block';
+            createParticles();
+        });
+
+        // Upload card click to select file
+        uploadCard.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop
+        uploadCard.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadCard.classList.add('dragover');
+        });
+
+        uploadCard.addEventListener('dragleave', () => {
+            uploadCard.classList.remove('dragover');
+        });
+
+        uploadCard.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadCard.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        // Handle file selection
+        function handleFileSelect(file) {
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp'];
+            if (!validTypes.includes(file.type)) {
+                alert('Please upload a valid image file (JPG, PNG, GIF, BMP)');
+                return;
+            }
+
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size must be less than 10MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                fileName.textContent = file.name;
+                previewContainer.classList.add('show');
+                buttonGroup.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Reset button
+        resetBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            previewContainer.classList.remove('show');
+            buttonGroup.style.display = 'none';
+            processingScreen.classList.remove('show');
+        });
+
+        // Form submit
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!fileInput.files[0]) return;
+
+            // Show processing screen
+            processingScreen.classList.add('show');
+            uploadCard.style.display = 'none';
+            previewContainer.style.display = 'none';
+            buttonGroup.style.display = 'none';
+
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const html = await response.text();
+                    document.open();
+                    document.write(html);
+                    document.close();
+                } else {
+                    alert('Error: ' + await response.text());
+                    resetBtn.click();
+                }
+            } catch (error) {
+                alert('Error uploading image: ' + error.message);
+                resetBtn.click();
+            }
+        });
+
+        // Create floating particles for background
+        function createParticles() {
+            const container = document.getElementById('particleContainer');
+            const particleCount = 30;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDuration = (10 + Math.random() * 20) + 's';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(particle);
+            }
+        }
+    </script>
+</body>
+</html>
