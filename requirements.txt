@@ -1,8 +1,5 @@
-streamlit
-tensorflow==2.15.0
-numpy==1.23.5
+gradio==4.10.0
+tensorflow==2.13.0
+numpy==1.24.3
+pillow==10.0.0
 opencv-python-headless
-pillow
-scikit-learn
-matplotlib
-seaborn
